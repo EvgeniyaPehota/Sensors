@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Sensor Application</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+<h1>Sensor Management</h1>
+
+<div>
+  <h2>Search Sensors</h2>
+  <input type="text" id="searchQuery" placeholder="input name or model">
+  <button onclick="searchSensors()">Search</button>
+  <div id="searchResults"></div>
+</div>
+
+<div>
+  <h2>Available Sensors</h2>
+  <ul id="sensorList"></ul>
+</div>
+
+<div id="addSensorDiv" style="display: none;">
+  <h2>Add Sensor</h2>
+  <input type="text" id="sensorName" placeholder="Name">
+  <input type="text" id="sensorModel" placeholder="Model">
+  <button onclick="addSensor()">Add</button>
+</div>
+
+<script>
+  function loadSensors() {
+      fetch('/sensors/view')
+          .then(response => response.json())
+          .then(data => {
+              const sensorList = document.getElementById('sensorList');
+              sensorList.innerHTML = '';
+              data.forEach(sensor => {
+                  const li = document.createElement('li');
+                  li.textContent = `${sensor.name} - ${sensor.model}`;
+                  sensorList.appendChild(li);
+              });
+          });
+  }
+
+  function searchSensors() {
+      const query = document.getElementById('searchQuery').value;
+      fetch(`/sensors/search?query=${query}`)
+          .then(response => response.json())
+          .then(data => {
+              const searchResults = document.getElementById('searchResults');
+              searchResults.innerHTML = '';
+              data.forEach(sensor => {
+                  const div = document.createElement('div');
+                  div.textContent = `${sensor.name} - ${sensor.model}`;
+                  searchResults.appendChild(div);
+              });
+          });
+  }
+
+  function addSensor() {
+      const name = document.getElementById('sensorName').value;
+      const model = document.getElementById('sensorModel').value;
+      fetch('/sensors/add', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: name, model: model })
+      }).then(() => {
+          loadSensors();
+          document.getElementById('sensorName').value = '';
+          document.getElementById('sensorModel').value = '';
+      });
+  }
+
+  loadSensors();
+  document.onload = function() {
+      const role = /* Получите роль пользователя после аутентификации */;
+      if (role === 'ADMIN') {
+          document.getElementById('addSensorDiv').style.display = 'block';
+      }
+  }
+</script>
+</body>
+</html>
